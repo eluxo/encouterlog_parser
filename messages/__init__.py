@@ -193,7 +193,8 @@ class CombatEvent(Message):
         self.eventType = row[2]          # see at the end of the file
         self.effectCategory = row[3]     # COLD,DISEASE,FIRE,GENERIC,MAGIC,NONE,OBLIVION,PHYSICAL,POISON,SHOCK
         self.effectedResource = row[4]   # INVALID,MAGICKA,STAMINA,ULTIMATE,MOUNT_STAMINA
-        self.effectAmount = int(row[5])  # amount of change on target
+        self.damage = int(row[5])        # amount of damage?
+        self.heal = int(row[6])          # amount of heal?
         
         self.castId = int(row[7])
         self.abilityId = int(row[8]) #4103177,38250,
