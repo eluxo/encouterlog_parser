@@ -114,7 +114,7 @@ class UnitAdded(Message):
         self.unitCP = row[14]
         # 15
         self.unitAttitude = row[16]
-        # 17
+        self.inParty = True if row[9] == "T" else False # verify?
         #1574407,UNIT_ADDED,34,MONSTER,F,0,74123,F,0,0,"Wache des Hauses","",0,50,160,0,NEUTRAL,F
         #1574407,UNIT_ADDED,35,PLAYER,F,10,0,F,6,8,"","",0,46,0,0,PLAYER_ALLY,F
         #4,UNIT_ADDED,1,PLAYER,T,4,0,F,6,6,"","",0,50,927,0,PLAYER_ALLY,F
@@ -151,14 +151,14 @@ class EndCast(Message):
 class EffectInfo(Message):
     def __init__(self, row):
         super(EffectInfo, self).__init__(row)
-        self.effectId = int(row[2])
+        self.abilityId = int(row[2]) # -> AbilityInfo -> AbilityId
         self.effectCategory = row[3] # BUFF, DEBUFF
-        self.effectType = row[4] # BLEED, DISEASE, MAGIC, NONE, POISON, SNARE
+        self.effectType = row[4]     # BLEED, DISEASE, MAGIC, NONE, POISON, SNARE
         # 5
         #1580769,EFFECT_INFO,57477,BUFF,NONE,F
         #1582683,EFFECT_INFO,36598,BUFF,NONE,T
         #503821,EFFECT_INFO,26874,BUFF,NONE,T,26832
-         
+
 class BeginCast(Message):
     def __init__(self, row):
         super(BeginCast, self).__init__(row, 6, 16)
@@ -167,20 +167,19 @@ class BeginCast(Message):
         #6047995,BEGIN_CAST,0,F,21621932,15435,119,32917/32917,10749/10749,15603/15603,500/500,0/1000,0,0.2921,0.4455,1.4435,0,0/0,0/0,0/0,0/0,0/0,0,0.0000,0.0000,0.0000
         # 2
         # 3
-        # 4
+        self.castId = int(row[4])
         self.abilityId = int(row[5])
 
 class EffectChanged(Message):
     def __init__(self, row):
         super(EffectChanged, self).__init__(row, 6, 16)
         self.changeType = row[2] # GAINED, FADED, UPDATED
-        self.unitId = int(row[3]) # the one casting or the one receiving? guess the first.
+        # 3 # self.unitId = int(row[3]) # the one casting or the one receiving? guess the first.
         #0    1              2      3 4       5   6 7           8           9           10      11     12    13     14     15     16
         #4215,EFFECT_CHANGED,GAINED,1,2759103,973,1,40844/40844,20505/23025,21717/24003,449/500,0/1000,26902,0.5177,0.8850,5.9674,*
         # same as in BeginCast
-        # 4
-        # 5
-        self.effectId = row[5]
+        self.castId = row[4]    # -> BeginCast.castId
+        self.abilityId = row[5] # -> AbilityInfo.abilityId
 
 class HealthRegen(Message):
     def __init__(self, row):
@@ -191,9 +190,13 @@ class HealthRegen(Message):
 class CombatEvent(Message):
     def __init__(self, row):
         super(CombatEvent, self).__init__(row, 9, 19)
-        self.eventType = row[2] # see at the end of the file
-        # 3 # COLD,DISEASE,FIRE,GENERIC,MAGIC,NONE,OBLIVION,PHYSICAL,POISON,SHOCK
-        # 4 # INVALID,MAGICKA,STAMINA,ULTIMATE
+        self.eventType = row[2]          # see at the end of the file
+        self.effectCategory = row[3]     # COLD,DISEASE,FIRE,GENERIC,MAGIC,NONE,OBLIVION,PHYSICAL,POISON,SHOCK
+        self.effectedResource = row[4]   # INVALID,MAGICKA,STAMINA,ULTIMATE,MOUNT_STAMINA
+        self.effectAmount = int(row[5])  # amount of change on target
+        
+        self.castId = int(row[7])
+        self.abilityId = int(row[8]) #4103177,38250,
         
         #4447,COMBAT_EVENT,POWER_DRAIN,GENERIC,STAMINA,479,0,4100939,15356,4,18748/18748,34198/34198,11552/12031,255/500,0/1000,0,0.6274,0.4590,1.6218,*
         #4781,COMBAT_EVENT,HEAL,GENERIC,MAGICKA,0,1828,4100988,88988,4,18748/18748,34198/34198,11552/12031,255/500,0/1000,0,0.6253,0.4599,1.9407,*
@@ -213,19 +216,49 @@ class UnitChanged(Message):
         self.unitCP = row[6]
         # 7
         self.unitAttitude = row[8]
-        # 9
+        self.inParty = True if row[9] == "T" else False # verify?
         
         #484573,UNIT_CHANGED,245,0,0,"Skelett-Schütze","",0,50,160,0,HOSTILE,F
         #522730,UNIT_CHANGED,643,0,0,"Skelett-Schütze","",0,50,160,0,HOSTILE,F
         #551112,UNIT_CHANGED,927,0,0,"Frostbrunnen","",0,50,160,0,HOSTILE,F
         #554326,UNIT_CHANGED,924,0,0,"Nachstellender Sprengknochen","",0,50,160,0,HOSTILE,F
 
-
 class PlayerInfo(Message):
     def __init__(self, row):
         super(PlayerInfo, self).__init__(row)
-        # TBD completely. gear info has a lot of fields.
-                        
+        row = self.__insert(row)
+        self.unitId = row[2]       # ->UnitAdded.unitId
+        self.passives = row[3]     # contains active effects (passives?)
+        self.passivesMask = row[4] # not completely sure, but this seems to be a mask for the effects
+        self.currentGear = row[5]  # contains arrays of gear information
+        self.frontAbilities = row[6]
+        self.backAbilities = row[7]
+        self.row = row
+        print "%4d [ %s ] [ %s ]" % (self.unitId, " ".join(["%6d" % x for x in self.frontAbilities]), " ".join(["%6d" % x for x in self.backAbilities]))
+
+    def __insert(self, entries):
+        stack = [[],]
+        while len(entries) > 0:
+            value = entries.pop(0)
+            while value.startswith("["):
+                stack.append([])
+                value = value[1:]
+            
+            upstack = 0
+            while value.endswith("]"):
+                upstack += 1
+                value = value[:-1]
+            
+            try:
+                value = int(value)
+            except:
+                pass
+            stack[-1].append(value)
+            for i in range(upstack):
+                sublist = stack.pop(-1)
+                stack[-1].append(sublist)
+        return stack[0]
+                                   
 TYPE_MAP = {
     'PLAYER_INFO': PlayerInfo,
     'COMBAT_EVENT': CombatEvent,

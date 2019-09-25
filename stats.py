@@ -11,7 +11,8 @@ import time
 
 
 #LOGFILE='/mnt/c/Users/nexus/Documents/Elder Scrolls Online/live/Logs/encounterlog.backup.txt'
-LOGFILE='/mnt/c/Users/nexus/Documents/Elder Scrolls Online/live/Logs/Encounter.log'
+#LOGFILE='/mnt/c/Users/nexus/Documents/Elder Scrolls Online/live/Logs/Encounter.log'
+LOGFILE='samples/sample1.log'
 #fp = open(LOGFILE, "rb")
 class CsvSource:
     def __init__(self, filename):

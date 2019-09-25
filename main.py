@@ -5,8 +5,9 @@ import csv
 import messages
 import traceback as tr
 
-LOGFILE='/mnt/c/Users/nexus/Documents/Elder Scrolls Online/live/Logs/encounterlog.backup.txt'
+#LOGFILE='/mnt/c/Users/nexus/Documents/Elder Scrolls Online/live/Logs/encounterlog.backup.txt'
 #LOGFILE='/mnt/c/Users/nexus/Documents/Elder Scrolls Online/live/Logs/Encounter.log'
+LOGFILE="samples/sample1.log"
 fp = open(LOGFILE, "rb")
 reader = csv.reader(fp)
 
