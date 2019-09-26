@@ -61,7 +61,6 @@ class UnitRegistry(BasicRegistry):
         @param unitAdded: The adding message.
         '''
         self.__units[unitAdded.unitId] = unitAdded
-        print "adding unit %d %s %s" % (unitAdded.unitId, unitAdded.name, unitAdded.account)
     
     def __unitRemoved(self, unitRemoved):
         '''
@@ -70,10 +69,28 @@ class UnitRegistry(BasicRegistry):
         @param unitRemoved: The removal message.
         '''
         unit = self.__units[unitRemoved.unitId]
-        print "removing unit %d %s %s" % (unit.unitId, unit.name, unit.account)
         self.__units[unitRemoved.unitId] = None
         del self.__units[unitRemoved.unitId]
 
+    def get(self, unitId):
+        '''
+        Returns the unit for the given ID, if any with this ID exists.
+        
+        @param unitId: ID of the unit to request.
+        @return: Unit with the given ID.
+        '''
+        if not unitId in self.__units:
+            return None
+        return self.__units[unitId]
+
+    def list(self):
+        '''
+        Returns a list of all known units.
+        
+        @return: List of all units.
+        '''
+        return self.__units.values()
+        
 class AbilityRegistry(BasicRegistry):
     '''
     Database holding all abilities including their IDs.
@@ -93,7 +110,6 @@ class AbilityRegistry(BasicRegistry):
         abilities are added to the database.
         '''
         self.__abilities[abilityInfo.abilityId] = abilityInfo
-        print "adding ability %d %s" % (abilityInfo.abilityId, abilityInfo.name)
 
 class EffectRegistry(BasicRegistry):
     '''
@@ -114,8 +130,7 @@ class EffectRegistry(BasicRegistry):
         
         @param effectInfo: The effect to be added.
         '''
-        self.__effects[effectInfo.effectId] = effectInfo
-        print "adding effect %d %s" % (effectInfo.effectId, effectInfo.effectType)
+        self.__effects[effectInfo.abilityId] = effectInfo
 
 class LogDatabase:
     '''
@@ -139,9 +154,5 @@ class LogDatabase:
         '''
         for registry in self.__registries:
             registry.handle(message)
-
-
-
-
 
         
