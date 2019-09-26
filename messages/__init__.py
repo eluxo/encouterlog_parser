@@ -40,30 +40,37 @@ class UnitStats(object):
         self.currentMag,  self.maxMag =  self.parseResource(row[i + 2])
         self.currentStam, self.maxStam = self.parseResource(row[i + 3])
         self.currentUlti, self.maxUlti = self.parseResource(row[i + 4])
-        self.currentU2, self.maxU2 =     self.parseResource(row[i + 5]) # UNKNOWN
+        self.currentU2, self.maxU2 =     self.parseResource(row[i + 5]) # TODO: x/1000 value. unknown.
         self.shield = int(row[i + 6])
         self.position = Position(row, i + 7)
 
     def parseResource(self, value):
         return [int(x) for x in value.split('/')]
     
-class BeginCombat(Message):   # COMPLETE
+class BeginCombat(Message):
     def __init__(self, row):
         super(BeginCombat, self).__init__(row)
 
-class EndCombat(Message):    # COMPLETE
+class EndCombat(Message):
     def __init__(self, row):
         super(EndCombat, self).__init__(row)
 
 class TrialInit(Message):
     def __init__(self, row):
         super(TrialInit, self).__init__(row)
-        # 5,TRIAL_INIT,12,F,F,0,0,F,0
+        # TODO: 2 -> 12 number of players required?
+        # TODO: 3 T/F
+        # TODO: 4 T/F
+        # TODO: 5
+        # TODO: 6
+        # TODO: 7 T/F
+        # TODO: 8
+        # 5,TRIAL_INIT,12,F,F,0,0,F,0 (???)
 
 class BeginTrial(Message):
     def __init__(self, row):
         super(BeginTrial, self).__init__(row)
-        # 2
+        # TODO: 2 -> 12. seems to be the same on TrialInit.
         self.serverTime = row[3]
         # 428363,BEGIN_TRIAL,12,1568915944828
 
@@ -75,7 +82,7 @@ class BeginLog(Message):
     def __init__(self, row):
         super(BeginLog, self).__init__(row)
         self.serverTime = int(row[2])
-        # 3 -> 15 ? (region code?)
+        # TODO: 3 -> 15 ? (region code?)
         self.server = row[4]
         self.language = row[5]
         self.version = row[6]
@@ -95,35 +102,64 @@ class MapChanged(Message):   # COMPLETE
         self.mapId = row[2]
         self.mapName = row[3]
         self.mapFile = row[4]
-        
+
+CLASS_ID = [
+  None,
+  "DK",
+  "SC",
+  "NB",
+  "WD",
+  "NC",
+  "TP",
+]
+
+RACE_ID = [
+  None,
+  "Breton",
+  "Redguard",
+  "Orc",
+  "Dark Elf",
+  "Nord",
+  "Argonian",
+  "High Elf",
+  "Wood Elf",
+  "Khajit",
+  "Imperial",
+]
+
+class UNIT_ATTITUDE:
+    FRIENDLY = "FRIENDLY"
+    HOSTILE = "HOSTILE"
+    NEUTRAL = "NEUTRAL"
+    NPC_ALLY="NPC_ALLY"
+    PLAYER_ALLY="PLAYER_ALLY"
+
+class UNIT_TYPE:
+    PLAYER = "PLAYER"
+    MONSTER = "MONSTER"
+    OBJECT = "OBJECT"
+
 class UnitAdded(Message):
     def __init__(self, row):
         super(UnitAdded, self).__init__(row)
         self.unitId = int(row[2])
-        self.unitType = row[3]
-        # 4
-        # 5
-        # 6
-        # 7
-        # 8
-        # 9
-        self.unitName = row[10]
-        self.unitAccount = row[11]
-        # 12
-        self.unitLevel = row[13]
-        self.unitCP = row[14]
-        # 15
-        self.unitAttitude = row[16]
-        self.inParty = True if row[9] == "T" else False # verify?
-        #1574407,UNIT_ADDED,34,MONSTER,F,0,74123,F,0,0,"Wache des Hauses","",0,50,160,0,NEUTRAL,F
-        #1574407,UNIT_ADDED,35,PLAYER,F,10,0,F,6,8,"","",0,46,0,0,PLAYER_ALLY,F
-        #4,UNIT_ADDED,1,PLAYER,T,4,0,F,6,6,"","",0,50,927,0,PLAYER_ALLY,F
-        #4,UNIT_ADDED,1,PLAYER,T,5,0,F,6,6,"","",0,50,927,0,PLAYER_ALLY,T
-        #4,UNIT_ADDED,4,PLAYER,F,6,0,F,4,6,"","",0,50,1217,0,PLAYER_ALLY,T
-        #4,UNIT_ADDED,21,PLAYER,F,7,0,F,3,8,"","",0,50,125,0,PLAYER_ALLY,T
-        #5,UNIT_ADDED,19,PLAYER,F,8,0,F,3,9,"","",0,50,27,0,PLAYER_ALLY,T
+        self.unitType = row[3]                                # -> UNIT_TYPE
+        # TODO: 4? T/F
+        self.playerId = int(row[5])                       # 5 -> TODO: only set for PLAYERS and counted upwards, unique by session?
+        self.monsterType = int(row[6])                    # 6 -> TODO: only set for MONSTER
+        # TODO: 7? T/F
+        self.classId = int(row[8])                        # -> CLASS_ID array
+        self.raceId = int(row[9])                         # -> RACE_ID array
+        self.name = row[10]
+        self.account = row[11]
+        self.uuid = int(row[12])
+        self.level = row[13]                              # 1-50
+        self.cp = row[14]                                 # does not cap with 810
+        self.parentId = int(row[14])                      # unit owning this unit
+        self.attitude = row[16]                           # -> UNIT_ATTITUDE
+        self.inParty = True if row[9] == "T" else False   # TODO: verify!
 
-class UnitRemoved(Message):  # COMPLETE
+class UnitRemoved(Message):
     def __init__(self, row):
         super(UnitRemoved, self).__init__(row)
         self.unitId = int(row[2])
@@ -134,19 +170,20 @@ class AbilityInfo(Message):
         self.abilityId = int(row[2])
         self.abilityName = row[3]
         self.abilityIcon = row[4]
-        # 5
-        # 6
-        #5,ABILITY_INFO,63150,"Rache","/esoui/art/icons/ability_mage_065.dds",T,T
-        #5,ABILITY_INFO,61555,"Magieerosion","/esoui/art/icons/ability_weapon_016.dds",F,T
-    
+        # TODO: 5? T/F
+        # TODO: 6? T/F
+
+class INTERRUPT_STATUS:
+    COMPLETED = "COMPLETED"
+    PLAYER_CANCELLED = "PLAYER_CANCELLED"
+    INTERRUPTED = "INTERRUPTED"
+
 class EndCast(Message):
     def __init__(self, row):
         super(EndCast, self).__init__(row)
-        #5665,END_CAST,COMPLETED,2827434,22182
-        self.castStatus = row[2] # COMPLETED, PLAYER_CANCELLED, INTERRUPTED
-        self.abilityId = row[4]
-        # 5
-        #6284,END_CAST,COMPLETED,3717871,28541
+        self.interruptStatus = row[2] # -> INTERRUPT_STATUS
+        self.abilityId = row[3]       # -> AbilityInfo.abilityId
+        self.castId = row[4]          # -> BeginCast.castId
 
 class EffectInfo(Message):
     def __init__(self, row):
@@ -187,12 +224,80 @@ class HealthRegen(Message):
         # 2 (amount?)
         self.sourceUnit = UnitStats(row, 3)
 
+class EVENT_TYPE:
+    ABILITY_ON_COOLDOWN = "ABILITY_ON_COOLDOWN"
+    BAD_TARGET = "BAD_TARGET"
+    BLOCKED_DAMAGE = "BLOCKED_DAMAGE"
+    BUSY = "BUSY"
+    CANNOT_USE = "CANNOT_USE"
+    CANT_SEE_TARGET = "CANT_SEE_TARGET"
+    CASTER_DEAD = "CASTER_DEAD"
+    CRITICAL_DAMAGE = "CRITICAL_DAMAGE"
+    CRITICAL_HEAL = "CRITICAL_HEAL"
+    DAMAGE = "DAMAGE"
+    DAMAGE_SHIELDED = "DAMAGE_SHIELDED"
+    DIED = "DIED"
+    DIED_XP = "DIED_XP"
+    DODGED = "DODGED"
+    DOT_TICK = "DOT_TICK"
+    DOT_TICK_CRITICAL = "DOT_TICK_CRITICAL"
+    FAILED = "FAILED"
+    FAILED_REQUIREMENTS = "FAILED_REQUIREMENTS"
+    FALL_DAMAGE = "FALL_DAMAGE"
+    HEAL = "HEAL"
+    HEAL_ABSORBED = "HEAL_ABSORBED"
+    HOT_TICK = "HOT_TICK"
+    HOT_TICK_CRITICAL = "HOT_TICK_CRITICAL"
+    IMMUNE = "IMMUNE"
+    INSUFFICIENT_RESOURCE = "INSUFFICIENT_RESOURCE"
+    INTERRUPT = "INTERRUPT"
+    IN_AIR = "IN_AIR"
+    KILLING_BLOW = "KILLING_BLOW"
+    KNOCKBACK = "KNOCKBACK"
+    LINKED_CAST = "LINKED_CAST"
+    MISSING_EMPTY_SOUL_GEM = "MISSING_EMPTY_SOUL_GEM"
+    OFFBALANCE = "OFFBALANCE"
+    POWER_DRAIN = "POWER_DRAIN"
+    POWER_ENERGIZE = "POWER_ENERGIZE"
+    QUEUED = "QUEUED"
+    REFLECTED = "REFLECTED"
+    REINCARNATING = "REINCARNATING"
+    SNARED = "SNARED"
+    SOUL_GEM_RESURRECTION_ACCEPTED = "SOUL_GEM_RESURRECTION_ACCEPTED"
+    SPRINTING = "SPRINTING"
+    STAGGERED = "STAGGERED"
+    STUNNED = "STUNNED"
+    TARGET_DEAD = "TARGET_DEAD"
+    TARGET_NOT_IN_VIEW = "TARGET_NOT_IN_VIEW"
+    TARGET_OUT_OF_RANGE = "TARGET_OUT_OF_RANGE"
+    TARGET_TOO_CLOSE = "TARGET_TOO_CLOSE"
+
+class EVENT_ELEMENT:
+    COLD = "COLD"
+    DISEASE = "DISEASE"
+    FIRE = "FIRE"
+    GENERIC = "GENERIC"
+    INVALID = "INVALID"
+    MAGIC = "MAGIC"
+    NONE = "NONE"
+    OBLIVION = "OBLIVION"
+    PHYSICAL = "PHYSICAL"
+    POISON = "POISON"
+    SHOCK = "SHOCK"
+
+class EventResource:
+    INVALID = "INVALID"
+    MAGICKA = "MAGICKA"
+    MOUNT_STAMINA = "MOUNT_STAMINA"
+    STAMINA = "STAMINA"
+    ULTIMATE = "ULTIMATE"
+
 class CombatEvent(Message):
     def __init__(self, row):
         super(CombatEvent, self).__init__(row, 9, 19)
-        self.eventType = row[2]          # see at the end of the file
-        self.effectCategory = row[3]     # COLD,DISEASE,FIRE,GENERIC,MAGIC,NONE,OBLIVION,PHYSICAL,POISON,SHOCK
-        self.effectedResource = row[4]   # INVALID,MAGICKA,STAMINA,ULTIMATE,MOUNT_STAMINA
+        self.eventType = row[2]          # -> EVENT_TYPE
+        self.element = row[3]            # -> EVENT_ELEMENT
+        self.resource = row[4]           # -> EVENT_RESOURCE INVALID,MAGICKA,STAMINA,ULTIMATE,MOUNT_STAMINA
         self.damage = int(row[5])        # amount of damage?
         self.heal = int(row[6])          # amount of heal?
         
@@ -228,14 +333,12 @@ class PlayerInfo(Message):
     def __init__(self, row):
         super(PlayerInfo, self).__init__(row)
         row = self.__insert(row)
-        self.unitId = row[2]       # ->UnitAdded.unitId
-        self.passives = row[3]     # contains active effects (passives?)
-        self.passivesMask = row[4] # not completely sure, but this seems to be a mask for the effects
-        self.currentGear = row[5]  # contains arrays of gear information
-        self.frontAbilities = row[6]
-        self.backAbilities = row[7]
-        self.row = row
-        print "%4d [ %s ] [ %s ]" % (self.unitId, " ".join(["%6d" % x for x in self.frontAbilities]), " ".join(["%6d" % x for x in self.backAbilities]))
+        self.unitId = row[2]         # -> UnitAdded.unitId
+        self.passives = row[3]       # contains active effects (TODO: passives?)
+        self.passivesMask = row[4]   # TODO: not completely sure, but this seems to be a mask for the effects
+        self.currentGear = row[5]    # contains arrays of gear information. should have a class for this.
+        self.bars = (row[6], row[7]) # ability bars -> AbilityInfo.abilityId
+        # print "%4d [ %s ] [ %s ]" % (self.unitId, " ".join(["%6d" % x for x in self.bars[0]]), " ".join(["%6d" % x for x in self.bars[1]]))
 
     def __insert(self, entries):
         stack = [[],]
@@ -250,11 +353,13 @@ class PlayerInfo(Message):
                 upstack += 1
                 value = value[:-1]
             
-            try:
-                value = int(value)
-            except:
-                pass
-            stack[-1].append(value)
+            if len(value) > 0:
+                try:
+                    value = int(value)
+                except:
+                    pass
+                stack[-1].append(value)
+
             for i in range(upstack):
                 sublist = stack.pop(-1)
                 stack[-1].append(sublist)
@@ -287,6 +392,8 @@ class MessageFactory(object):
         pass
     
     def create(self, row):
+        if len(row) < 2:
+            return None
         rowType = Message.getTypeFromRow(row)
         return TYPE_MAP[rowType](row)
 
