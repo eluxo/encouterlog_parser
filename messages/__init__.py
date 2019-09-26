@@ -5,6 +5,7 @@ class Message(object):
     def __init__(self, row, srcUnitIndex = None, dstUnitIndex = None):
         self.time = int(row[0])
         self.type = Message.getTypeFromRow(row)
+        self.typeId = MESSAGE_TYPE_MAP[self.type][0]
         self.row = row
 
         if srcUnitIndex:
@@ -168,8 +169,8 @@ class AbilityInfo(Message):
     def __init__(self, row):
         super(AbilityInfo, self).__init__(row)
         self.abilityId = int(row[2])
-        self.abilityName = row[3]
-        self.abilityIcon = row[4]
+        self.name = row[3]
+        self.icon = row[4]
         # TODO: 5? T/F
         # TODO: 6? T/F
 
@@ -364,27 +365,48 @@ class PlayerInfo(Message):
                 sublist = stack.pop(-1)
                 stack[-1].append(sublist)
         return stack[0]
+
+class MESSAGE_TYPE:
+    PLAYER_INFO =     0
+    COMBAT_EVENT =    1
+    END_LOG =         2
+    BEGIN_LOG =       3
+    UNIT_REMOVED =    4
+    BEGIN_COMBAT =    5
+    TRIAL_INIT =      6
+    END_COMBAT =      7
+    BEGIN_CAST =      8
+    END_CAST =        9  
+    MAP_CHANGED =    10
+    EFFECT_CHANGED = 11
+    BEGIN_TRIAL =    12
+    UNIT_ADDED =     13
+    ABILITY_INFO =   14
+    UNIT_CHANGED =   15
+    HEALTH_REGEN =   16
+    EFFECT_INFO =    17
+    ZONE_CHANGED =   18
                                    
-TYPE_MAP = {
-    'PLAYER_INFO': PlayerInfo,
-    'COMBAT_EVENT': CombatEvent,
-    'END_LOG': EndLog,
-    'BEGIN_LOG': BeginLog,
-    'UNIT_REMOVED': UnitRemoved,
-    'BEGIN_COMBAT': BeginCombat,
-    'TRIAL_INIT': TrialInit,
-    'END_COMBAT': EndCombat,
-    'BEGIN_CAST': BeginCast,
-    'END_CAST': EndCast,
-    'MAP_CHANGED': MapChanged,
-    'EFFECT_CHANGED': EffectChanged,
-    'BEGIN_TRIAL': BeginTrial,
-    'UNIT_ADDED': UnitAdded,
-    'ABILITY_INFO': AbilityInfo,
-    'UNIT_CHANGED': UnitChanged,
-    'HEALTH_REGEN': HealthRegen,
-    'EFFECT_INFO': EffectInfo,
-    'ZONE_CHANGED': ZoneChanged,
+MESSAGE_TYPE_MAP = {
+    'PLAYER_INFO':    (MESSAGE_TYPE.PLAYER_INFO,    PlayerInfo),
+    'COMBAT_EVENT':   (MESSAGE_TYPE.COMBAT_EVENT,   CombatEvent),
+    'END_LOG':        (MESSAGE_TYPE.END_LOG,        EndLog),
+    'BEGIN_LOG':      (MESSAGE_TYPE.BEGIN_LOG,      BeginLog),
+    'UNIT_REMOVED':   (MESSAGE_TYPE.UNIT_REMOVED,   UnitRemoved),
+    'BEGIN_COMBAT':   (MESSAGE_TYPE.BEGIN_COMBAT,   BeginCombat),
+    'TRIAL_INIT':     (MESSAGE_TYPE.TRIAL_INIT,     TrialInit),
+    'END_COMBAT':     (MESSAGE_TYPE.END_COMBAT,     EndCombat),
+    'BEGIN_CAST':     (MESSAGE_TYPE.BEGIN_CAST,     BeginCast),
+    'END_CAST':       (MESSAGE_TYPE.END_CAST,       EndCast),
+    'MAP_CHANGED':    (MESSAGE_TYPE.MAP_CHANGED,    MapChanged),
+    'EFFECT_CHANGED': (MESSAGE_TYPE.EFFECT_CHANGED, EffectChanged),
+    'BEGIN_TRIAL':    (MESSAGE_TYPE.BEGIN_TRIAL,    BeginTrial),
+    'UNIT_ADDED':     (MESSAGE_TYPE.UNIT_ADDED,     UnitAdded),
+    'ABILITY_INFO':   (MESSAGE_TYPE.ABILITY_INFO,   AbilityInfo),
+    'UNIT_CHANGED':   (MESSAGE_TYPE.UNIT_CHANGED,   UnitChanged),
+    'HEALTH_REGEN':   (MESSAGE_TYPE.HEALTH_REGEN,   HealthRegen),
+    'EFFECT_INFO':    (MESSAGE_TYPE.EFFECT_INFO,    EffectInfo),
+    'ZONE_CHANGED':   (MESSAGE_TYPE.ZONE_CHANGED,   ZoneChanged),
 }
 
 class MessageFactory(object):
@@ -395,7 +417,7 @@ class MessageFactory(object):
         if len(row) < 2:
             return None
         rowType = Message.getTypeFromRow(row)
-        return TYPE_MAP[rowType](row)
+        return MESSAGE_TYPE_MAP[rowType][1](row)
 
 
 '''
