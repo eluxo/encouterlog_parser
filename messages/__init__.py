@@ -8,15 +8,17 @@ class Message(object):
         self.typeId = MESSAGE_TYPE_MAP[self.type][0]
         self.row = row
 
+        self.srcUnit = None
         if srcUnitIndex:
-            self.srcUnit = UnitStats(row, srcUnitIndex)
-        else:
-            self.srcUnit = None
+            srcUnit = UnitStats(row, srcUnitIndex)
+            if srcUnit.unitId:
+                self.srcUnit = srcUnit
         
+        self.dstUnit = None
         if dstUnitIndex:
-            self.dstUnit = UnitStats(row, dstUnitIndex)
-        else:
-            self.dstUnit = None
+            dstUnit = UnitStats(row, dstUnitIndex)
+            if dstUnit.unitId:
+                self.dstUnit = dstUnit
 
     def parseResource(self, value):
         return [int(x) for x in value.split('/')]
@@ -159,7 +161,35 @@ class UnitAdded(Message):
         self.parentId = int(row[14])                      # unit owning this unit
         self.attitude = row[16]                           # -> UNIT_ATTITUDE
         self.inParty = True if row[9] == "T" else False   # TODO: verify!
+    
+    def getName(self):
+        '''
+        Constructs a name for the unit based on different values of the unit.
+        '''
+        name = ""
+        if len(self.name) > 0:
+            name += self.name
+        
+        if len(self.account) > 0:
+            name += " [%s]" % self.account
+        
+        if len(name) == 0:
+            name = "Anonymous %d" % self.unitId
+        
+        return name
 
+    def getClassName(self):
+        '''
+        Getter for the name of the class.
+        '''
+        return CLASS_ID[self.classId]
+    
+    def getRaceName(self):
+        '''
+        Getter for the name of the race.
+        '''
+        return RACE_ID[self.raceId]
+        
 class UnitRemoved(Message):
     def __init__(self, row):
         super(UnitRemoved, self).__init__(row)
