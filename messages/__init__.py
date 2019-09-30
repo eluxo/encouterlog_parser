@@ -162,7 +162,6 @@ class EndLog(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(EndLog, self).__init__(row)
 
 class BeginLog(Message):
@@ -178,7 +177,6 @@ class BeginLog(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(BeginLog, self).__init__(row)
         self.serverTime = int(row[2])
         # TODO: 3 -> 15 ? (region code?)
@@ -199,7 +197,6 @@ class ZoneChanged(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(ZoneChanged, self).__init__(row)
         self.zoneId = int(row[2]) # is this really a zone id? think so.
         self.zoneName = row[3]
@@ -217,7 +214,6 @@ class MapChanged(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(MapChanged, self).__init__(row)
         self.mapId = row[2]
         self.mapName = row[3]
@@ -281,7 +277,6 @@ class UnitAdded(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(UnitAdded, self).__init__(row)
         self.unitId = int(row[2])
         self.unitType = row[3]                                # -> UNIT_TYPE
@@ -356,7 +351,6 @@ class UnitRemoved(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(UnitRemoved, self).__init__(row)
         self.unitId = int(row[2])
 
@@ -379,7 +373,6 @@ class AbilityInfo(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(AbilityInfo, self).__init__(row)
         self.abilityId = int(row[2])
         self.name = row[3]
@@ -407,7 +400,6 @@ class EndCast(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(EndCast, self).__init__(row)
         self.interruptStatus = row[2] # -> INTERRUPT_STATUS
         self.abilityId = row[3]       # -> AbilityInfo.abilityId
@@ -439,7 +431,6 @@ class EffectInfo(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(EffectInfo, self).__init__(row)
         self.abilityId = int(row[2]) # -> AbilityInfo -> AbilityId
         self.effectCategory = row[3] # -> EFFECT_CATEGORY
@@ -468,7 +459,6 @@ class BeginCast(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(BeginCast, self).__init__(row, 6, 16)
         #0    1          2 3 4       5     6 7           8           9           10      11     12    13     14     15     16
         #1881,BEGIN_CAST,0,F,3168224,22262,1,40844/40844,18456/23025,24003/24003,449/500,0/1000,13233,0.2462,0.3413,0.3551,*
@@ -498,7 +488,6 @@ class EffectChanged(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(EffectChanged, self).__init__(row, 6, 16)
         self.change = row[2] # -> EFFECT_CHANGE
         # 3 # self.unitId = int(row[3]) # TODO: the one casting or the one receiving? guess the first.
@@ -518,7 +507,6 @@ class HealthRegen(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(HealthRegen, self).__init__(row)
         # 2 (amount?)
         self.sourceUnit = UnitStats(row, 3)
@@ -610,7 +598,6 @@ class CombatEvent(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(CombatEvent, self).__init__(row, 9, 19)
         self.eventType = row[2]          # -> EVENT_TYPE
         self.element = row[3]            # -> EVENT_ELEMENT
@@ -644,7 +631,6 @@ class UnitChanged(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(UnitChanged, self).__init__(row)
         self.unitId = row[2] # unsure
         # 2
@@ -681,7 +667,6 @@ class PlayerInfo(Message):
 
         @param row: The row of CSV data.
         '''
-        super(TrialInit, self).__init__(row)
         super(PlayerInfo, self).__init__(row)
         row = self.__insert(row)
         self.unitId = row[2]         # -> UnitAdded.unitId
