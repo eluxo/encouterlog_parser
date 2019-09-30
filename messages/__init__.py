@@ -4,16 +4,16 @@
 class Message(object):
     '''
     Base class for all the messages in the log.
-    
+
     This holds the different fields and subobjects shared by all messages.
-    
+
     All messages have a timestamp and a type of the message. Some messages also
     contain a source and destination unit of the effect or ability.
     '''
     def __init__(self, row, srcUnitIndex = None, dstUnitIndex = None):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         @param srcUnitIndex: Optional. If the message may contain a source
             unit, this defines the index of the first value of it.
@@ -30,7 +30,7 @@ class Message(object):
             srcUnit = UnitStats(row, srcUnitIndex)
             if srcUnit.unitId:
                 self.srcUnit = srcUnit
-        
+
         self.dstUnit = None
         if dstUnitIndex:
             dstUnit = UnitStats(row, dstUnitIndex)
@@ -41,7 +41,7 @@ class Message(object):
     def getTypeFromRow(row):
         '''
         Reads the object type from the row.
-        
+
         @param row: The row to read the type from.
         @return: Type value from the data row.
         '''
@@ -50,7 +50,7 @@ class Message(object):
 class Position(object):
     '''
     Position class.
-    
+
     This class holds the units position on the map.
     '''
     def __init__(self, row, i):
@@ -59,7 +59,7 @@ class Position(object):
 class UnitStats(object):
     '''
     Class holding all stat attributes of a single unit.
-    
+
     This is a part of most of the messages in the log and allows keeping track
     of the current status of the unit.
     '''
@@ -81,12 +81,12 @@ class UnitStats(object):
     def parseResource(self, value):
         '''
         Parses a resource value.
-        
+
         @param value: The resource value.
         @return: The parsed resource values.
         '''
         return [int(x) for x in value.split('/')]
-    
+
 class BeginCombat(Message):
     '''
     Marks the begin of a combat.
@@ -94,7 +94,7 @@ class BeginCombat(Message):
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(BeginCombat, self).__init__(row)
@@ -106,7 +106,7 @@ class EndCombat(Message):
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(EndCombat, self).__init__(row)
@@ -119,7 +119,7 @@ class TrialInit(Message):
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -135,14 +135,14 @@ class TrialInit(Message):
 class BeginTrial(Message):
     '''
     Start of the trial.
-    
+
     This is added when the trial timers start.
     '''
 
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(BeginTrial, self).__init__(row)
@@ -159,7 +159,7 @@ class EndLog(Message):
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -171,11 +171,11 @@ class BeginLog(Message):
     holds an absolute timestamp to allow referencing from the relative time
     values to an absolute server time.
     '''
-    
+
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -192,11 +192,11 @@ class ZoneChanged(Message):
     '''
     Marks the change of a zone where the logging player is currently located.
     '''
-    
-    def __init__(self, row): 
+
+    def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -210,11 +210,11 @@ class MapChanged(Message):
     Communicates the map whenever the player enters a location on a different
     map.
     '''
-    
+
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -262,23 +262,23 @@ class UNIT_TYPE:
 class UnitAdded(Message):
     '''
     Called whenever a new unit is added to the log.
-    
+
     Units are players, monsters, NPCs or objects that are in the range of the
     player.
-    
+
     All units that appear in the players range are always added to the log
     including the player and all the allies. So this allows keeping track of
     all the entities that exist during fights or interactions.
-    
+
     Each unit that is removed from the scenery will cause a UNIT_REMOVED
     message. As far as I can tell, this is stable and every unit is always
     removed when it disappears from the players scenery.
     '''
-    
+
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -299,41 +299,41 @@ class UnitAdded(Message):
         self.parentId = int(row[14])                      # unit owning this unit
         self.attitude = row[16]                           # -> UNIT_ATTITUDE
         self.inParty = True if row[9] == "T" else False   # TODO: verify!
-    
+
     def getName(self):
         '''
         Constructs a name for the unit based on different values of the unit.
-        
+
         If there is no naming information available, it will create those
         infamous Anonymus <number> entries that should match with the
         encounterlog website.
-        
+
         @return: Name for the unit.
         '''
         name = ""
         if len(self.name) > 0:
             name += self.name
-        
+
         if len(self.account) > 0:
             name += " [%s]" % self.account
-        
+
         if len(name) == 0:
             name = "Anonymous %d" % self.unitId
-        
+
         return name
 
     def getClassName(self):
         '''
         Getter for the name of the class.
-        
+
         @return: Class name of the entity. Only useful on players.
         '''
         return CLASS_ID[self.classId]
-    
+
     def getRaceName(self):
         '''
         Getter for the name of the race.
-        
+
         @return: Race name of the entity. Only useful on players.
         '''
         return RACE_ID[self.raceId]
@@ -343,7 +343,7 @@ class UnitAdded(Message):
         Returns true, if unit is a player character.
         '''
         return self.unitType == "PLAYER"
-        
+
 class UnitRemoved(Message):
     '''
     Every unit that gets added to the log will be removed from the log at some
@@ -353,7 +353,7 @@ class UnitRemoved(Message):
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -364,19 +364,19 @@ class AbilityInfo(Message):
     '''
     Abilities are defined using an AbilityInfo message. This message defines
     the name and the icon of the ability.
-    
+
     Each ability is not bound to a unit until it is mentioned in a former
     message.
-    
+
     Abilities can reappear but their abilityId is bound to a unit. A different
     unit having the same ability slotted might cause a new AbilityInfo of the
     same ability with a different abilityId value.
     '''
-    
+
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -395,7 +395,7 @@ class INTERRUPT_STATUS:
 class EndCast(Message):
     '''
     Marks the end of a cast event.
-    
+
     The end of a cast event contains information about the outcome of the cast
     telling more about the time the cast actually took and if it has been
     completed or interrupted.
@@ -404,7 +404,7 @@ class EndCast(Message):
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -428,15 +428,15 @@ class EFFECT_TYPE:
 class EffectInfo(Message):
     '''
     Buffs and debuffs are called effects in the log.
-    
+
     EFFECT_INFO messages mark the beginning of effects binding them to an
     ability using an ID.
     '''
-    
+
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -453,19 +453,19 @@ class EffectInfo(Message):
 class BeginCast(Message):
     '''
     Marks the begin of a cast.
-    
+
     A cast is the use of an active ability carried out by a unit.
 
     The cast may effect the unit itself or a different unit. If it only effects
     the casting unit, the messages dstUnit field will be None.
-    
+
     The srcUnit field is always set to Unit data.
     '''
-    
+
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -486,16 +486,16 @@ class EFFECT_CHANGE:
 class EffectChanged(Message):
     '''
     Effects might change over time.
-    
+
     Everytime an effect gets updated, an EFFECT_CHANGED message is created.
-    
+
     As BeginCast, this can have a srcUnit and dstUnit value.
     '''
-    
+
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -511,11 +511,11 @@ class HealthRegen(Message):
     '''
     HEALTH_REGEN messages mark events caused due to health reg values.
     '''
-    
+
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -594,20 +594,20 @@ class EVENT_RESOURCE:
 class CombatEvent(Message):
     '''
     COMBAT_EVENT messages identify each combat event.
-    
+
     They hold information about damage cause, resources restored, ... basically
     every atomic information that essentially defines a fight.
-    
+
     The COMBAT_EVENT always holds the details of the casting unit. It also
     identifies the target unit, if the event can be associated with one.
-    
+
     Note: Splitting all of the events will be some serious work.
     '''
-    
+
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -617,13 +617,13 @@ class CombatEvent(Message):
         self.resource = row[4]           # -> EVENT_RESOURCE INVALID,MAGICKA,STAMINA,ULTIMATE,MOUNT_STAMINA
         self.damage = int(row[5])        # amount of damage?
         self.heal = int(row[6])          # amount of heal?
-        
+
         self.castId = int(row[7])
         self.abilityId = int(row[8]) #4103177,38250,
-        
+
         #4447,COMBAT_EVENT,POWER_DRAIN,GENERIC,STAMINA,479,0,4100939,15356,4,18748/18748,34198/34198,11552/12031,255/500,0/1000,0,0.6274,0.4590,1.6218,*
         #4781,COMBAT_EVENT,HEAL,GENERIC,MAGICKA,0,1828,4100988,88988,4,18748/18748,34198/34198,11552/12031,255/500,0/1000,0,0.6253,0.4599,1.9407,*
-        # time type         eventType            res     dmg  ? castId  abId  pId   hp         mag          stam   ??       ??       ....              target    targetHp        .....             targetPos                             
+        # time type         eventType            res     dmg  ? castId  abId  pId   hp         mag          stam   ??       ??       ....              target    targetHp        .....             targetPos
         #5248,COMBAT_EVENT,CRITICAL_DAMAGE,FIRE,MAGICKA,5212,0,7957275,16165,1,11017/11017,31922/31922,9867/9867,66/500,0/1000,0,0.5085,0.4377,4.7704,268435457,3002289/3007501,0/0,0/0,0/0,0/0,0,0.5167,0.4375,-1.3146
 
 class UnitChanged(Message):
@@ -631,17 +631,17 @@ class UnitChanged(Message):
     Each unit has a specific configuration when it is created. This
     configuration might change, as a unit also carries an attitude towards us
     and our group.
-    
+
     If we (for example) attack a neutral unit, it might disliking us or even
     try to kill us. At that point, it switches from neutral to hostile.
-    
+
     The UNIT_CHANGE messages are used to reflect this change.
     '''
-    
+
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -657,7 +657,7 @@ class UnitChanged(Message):
         # 7
         self.unitAttitude = row[8]
         self.inParty = True if row[9] == "T" else False # verify?
-        
+
         #484573,UNIT_CHANGED,245,0,0,"Skelett-Schütze","",0,50,160,0,HOSTILE,F
         #522730,UNIT_CHANGED,643,0,0,"Skelett-Schütze","",0,50,160,0,HOSTILE,F
         #551112,UNIT_CHANGED,927,0,0,"Frostbrunnen","",0,50,160,0,HOSTILE,F
@@ -666,19 +666,19 @@ class UnitChanged(Message):
 class PlayerInfo(Message):
     '''
     Details about a player.
-    
+
     This contains information about a players passive abilities, active
     abilities slottet and a complete definition of the players gear.
-    
+
     There is a lot of stuff in here that still needs to be stripped
     apart and this is the location where gear IDs are used that are not
     a part of the log itself.
     '''
-    
+
     def __init__(self, row):
         '''
         Constructor.
-        
+
         @param row: The row of CSV data.
         '''
         super(TrialInit, self).__init__(row)
@@ -694,10 +694,10 @@ class PlayerInfo(Message):
     def __insert(self, entries):
         '''
         Makes trees out of horizontal lines.
-        
+
         Might still need some fairydust, but believe me: Unicorns are happily
         living here.
-        
+
         @param entries: The row of data to be parse.
         @return: Nice tree structure that allows easier access.
         '''
@@ -707,12 +707,12 @@ class PlayerInfo(Message):
             while value.startswith("["):
                 stack.append([])
                 value = value[1:]
-            
+
             upstack = 0
             while value.endswith("]"):
                 upstack += 1
                 value = value[:-1]
-            
+
             if len(value) > 0:
                 try:
                     value = int(value)
@@ -735,7 +735,7 @@ class MESSAGE_TYPE:
     TRIAL_INIT =      6
     END_COMBAT =      7
     BEGIN_CAST =      8
-    END_CAST =        9  
+    END_CAST =        9
     MAP_CHANGED =    10
     EFFECT_CHANGED = 11
     BEGIN_TRIAL =    12
@@ -745,7 +745,7 @@ class MESSAGE_TYPE:
     HEALTH_REGEN =   16
     EFFECT_INFO =    17
     ZONE_CHANGED =   18
-                                   
+
 MESSAGE_TYPE_MAP = {
     'PLAYER_INFO':    (MESSAGE_TYPE.PLAYER_INFO,    PlayerInfo),
     'COMBAT_EVENT':   (MESSAGE_TYPE.COMBAT_EVENT,   CombatEvent),
@@ -771,12 +771,12 @@ MESSAGE_TYPE_MAP = {
 class MessageFactory(object):
     '''
     Everthing should end with a factory.
-    
+
     This one creates messages out of raw data.
     '''
     def __init__(self):
         pass
-    
+
     def create(self, row):
         '''
         Creates a message based on the given row of CSV data.
