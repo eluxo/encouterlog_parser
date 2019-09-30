@@ -112,7 +112,7 @@ class EventSource(object):
 
                 self.__callback(self, message)
             except:
-                print row
+                print(row)
                 tr.print_exc()
 
     def setObserver(self, callback):
@@ -144,7 +144,7 @@ class EventSource(object):
         Creates an EventSource based on a file that is read until EOF is
         found.
         '''
-        return EventSource(csv.reader(open(filename, "rb")))
+        return EventSource(csv.reader(open(filename, "r")))
 
     @staticmethod
     def createFileStreamSource(filename):

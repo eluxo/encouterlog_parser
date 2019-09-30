@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 # encoding: utf-8
 
 import csv
@@ -17,10 +17,10 @@ LOGFILE='samples/sample1.log'
 class CsvSource:
     def __init__(self, filename):
         self.__fp = open(filename, "rb")
-    
+
     def __iter__(self):
         return self
-    
+
     def next(self):
         pos = self.__fp.tell()
         while True:
@@ -28,11 +28,11 @@ class CsvSource:
             rc = self.__fp.readline()
             if rc.endswith("\n"):
                 return rc
-            
+
             if len(rc) != 0:
                 self.__fp.seek(pos)
             time.sleep(0.01)
-        
+
     def __printLatency(self):
             latency = meter.getLatency()
             h = latency / (1000 * 60 * 60)
@@ -40,7 +40,7 @@ class CsvSource:
             s = (latency / 1000) % 60
             ms = latency % 1000
             sys.stdout.write("Latency: %-12d [%02d:%02d:%02d.%03d]        \r" % (latency, h, m, s, ms))
-            
+
 
 csvSource = CsvSource(LOGFILE)
 reader = csv.reader(csvSource)
@@ -60,13 +60,13 @@ def render(cur, max, color):
         max = 1
     if cur > max:
         cur = max
-    
+
     count = cur * 15 / max
     missing = 15 - count
     pct = cur * 100 / max
-    
-    
-    bar =   "%s[%s%s] %3i%% %s" % (color, "#" * count, " " * missing,  pct, RESET) 
+
+
+    bar =   "%s[%s%s] %3i%% %s" % (color, "#" * count, " " * missing,  pct, RESET)
     value = "%s%-23s%s" % (color, "%d/%d" % (cur, max), RESET)
     return bar, value
 
@@ -83,7 +83,7 @@ while True:
             sys.stdout.write("\033[0;0H")
             print nallies, len(allies.allies)
             if nallies > len(allies.allies):
-                sys.stdout.write("\033[2J")            
+                sys.stdout.write("\033[2J")
             nallies = len(allies.allies)
             for id, ally in allies.allies.iteritems():
                 hp = ["", ""]
