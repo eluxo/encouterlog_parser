@@ -189,6 +189,12 @@ class UnitAdded(Message):
         Getter for the name of the race.
         '''
         return RACE_ID[self.raceId]
+
+    def isPlayer(self):
+        '''
+        Returns true, if unit is a player character.
+        '''
+        return self.unitType == "PLAYER"
         
 class UnitRemoved(Message):
     def __init__(self, row):
