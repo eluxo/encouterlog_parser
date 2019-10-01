@@ -1,5 +1,8 @@
 import time
 import csv
+import threading
+
+import database
 
 import traceback as tr
 
@@ -90,34 +93,74 @@ class EventSource(object):
         self.__reader = reader
         self.__factory = MessageFactory()
         self.__count = 0
-        self.__callback = None
+        self.__observers = []
+        self.__enableDatabase = False
+        self.__running = False
+        self.thread = None
+        self.database = database.LogDatabase()
 
-    def loop(self):
+    def loop(self, background = False):
         '''
         The main loop of the event source. This remains blocking until the
         reader runs out of data.
 
         If the reader is one that does wait for more data on EOF, this will
         block forever.
+
+        If a blocking call is not applicable, the loop can also be put into
+        a background thread. All callbacks will then be handled from within
+        the background thread.
+
+        Having a background thread collecting and parsing the data makes
+        sense when live data is captured.
+
+        @param background: If set true, a background thread will be created.
         '''
+        if self.__running:
+            raise Exception("can only bestarted once")
+
+        self.__running = True
+        if background:
+            thread = threading.Thread(target = self.loop)
+            self.__running = False
+            thread.start()
+            self.thread = thread
+            return self
+
+        useDatabase = self.__enableDatabase
         for row in self.__reader:
             try:
                 self.__count += 1
-                if not self.__callback:
+                if len(self.__observers) == 0:
                     continue
 
                 message = self.__factory.create(row)
                 if not message:
                     continue
 
-                self.__callback(self, message)
+                if useDatabase:
+                    self.database.handle(self, message)
+
+                for observer in self.__observers:
+                    observer(self, message)
             except:
                 print(row)
                 tr.print_exc()
+        return self
 
-    def setObserver(self, callback):
+    def addHandler(self, handler):
         '''
-        Sets the observer method that gets called by the EventSource
+        This is only a wrapper around the addObserver method to allow adding
+        BasicHandler instances without having to care about the base classes
+        interface.
+
+        @param handler: Instance of the handler to be added.
+        '''
+        return self.addObserver(handler.handle)
+
+    def addObserver(self, callback):
+        '''
+        Adds an observer method that gets called by the EventSource
         everytime a new line of data bas been received.
 
         The callback will receive two parameters:
@@ -125,9 +168,36 @@ class EventSource(object):
         1. the instance of the EventSource
         2. the message object that has been received
 
-        @param callback: The callback to be used.
+        @param callback: The observer to be added.
         '''
-        self.__callback = callback
+        self.__observers.append(callback)
+        return self
+
+    def remHandler(self, handler):
+        '''
+        This is only a wrapper around the remObserver method to allow adding
+        BasicHandler instances without having to care about the base classes
+        interface.
+
+        @param handler: Instance of the handler to be added.
+        '''
+        return self.remObserver(handler.handle)
+
+    def remObserver(self, callback):
+        '''
+        Removes an observer from ther list of observers.
+
+        @param callback: The observer to be removed.
+        '''
+        self.__observers.remove(callback)
+
+    def enableDatabase(self):
+        '''
+        Enables using the internal database object. This needs to be called
+        before the handling loop is started as otherwise important messages are
+        skipped and the integrity of the database can not be assured.
+        '''
+        self.__enableDatabase = True
         return self
 
     def getLines(self):
@@ -153,3 +223,4 @@ class EventSource(object):
         will block on EOF until new content is received.
         '''
         return EventSource(csv.reader(TailSource(filename)))
+
