@@ -25,6 +25,7 @@ class GameClock(BasicHandler):
         self.__currentTime = 0    # holds the time last seen in the log
         self.__combatStart = 0
         self.__combatEnd = 0
+        self.__lastUpdate = 0
 
         self._setClaim(MessageType.BEGIN_COMBAT, self.__beginCombat)
         self._setClaim(MessageType.END_COMBAT,   self.__endCombat)
@@ -69,6 +70,7 @@ class GameClock(BasicHandler):
         @param message: The message used to set the time.
         '''
         self.__currentTime = self.__getAbsTime(message)
+        self.__lastUpdate = int(time.time() * 1000)
 
     def __getAbsTime(self, message):
         '''
@@ -99,14 +101,39 @@ class GameClock(BasicHandler):
         '''
         return int(time.time() * 1000) - self.getGameClock()
 
-    def getTimeString(self, time):
+    def getCombatStart(self):
+        '''
+        Returns the time, when the last combat has started.
+
+        @return: Time of the last combat start.
+        '''
+        return self.__combatStart
+
+    def getCombatEnd(self):
+        '''
+        Returns the time, when the last combat has ended.
+
+        @return: Time of the last combat end.
+        '''
+        return self.__combatEnd
+
+    def getLastUpdate(self):
+        '''
+        Returns the time, when the last message has been received.
+
+        @return: Time when the last message has been received.
+        '''
+        return self.__lastUpdate
+
+    def getTimeString(self, timestamp):
         '''
         Returns a string representation of the given timestamp split into the
         different elements.
+
+        @param timestamp: The timestamp to format.
         '''
-        latency = meter.getLatency()
-        h = latency / (1000 * 60 * 60)
-        m = (latency / (1000 * 60)) % 60
-        s = (latency / 1000) % 60
-        ms = latency % 1000
+        h = timestamp / (1000 * 60 * 60)
+        m = (timestamp / (1000 * 60)) % 60
+        s = (timestamp / 1000) % 60
+        ms = timestamp % 1000
         return "%02d:%02d:%02d.%03d" % (h, m, s, ms)
