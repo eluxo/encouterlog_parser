@@ -111,6 +111,9 @@ class EventSource(object):
         useDatabase = self.__enableDatabase
         for row in self.__reader:
             try:
+                if not self.__running:
+                    return self
+
                 self.__count += 1
                 if len(self.__observers) == 0:
                     continue
@@ -119,6 +122,10 @@ class EventSource(object):
                 if not message:
                     continue
 
+                # Note the order:
+                #   1.) clock update
+                #   2.) database update
+                #   3.) call observers
                 self.clock.handle(self, message)
                 if useDatabase:
                     self.database.handle(self, message)
@@ -130,6 +137,14 @@ class EventSource(object):
                 tr.print_exc()
         return self
 
+    def stop(self):   # TODO: make it work properly
+        '''
+        Stops the event loop.
+        
+        This will only stop, if there is new data on the input file for now.
+        '''
+        self.__running = False  # TODO: using a different variable will make it safe
+        
     def addHandler(self, handler):
         '''
         This is only a wrapper around the addObserver method to allow adding
