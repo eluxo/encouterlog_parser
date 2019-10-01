@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
-import time
 import csv
 import threading
 
@@ -12,6 +11,8 @@ import traceback as tr
 from messages import MessageFactory
 
 from utils.time import GameClock
+
+import time
 
 class TailSource:
     '''
