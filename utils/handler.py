@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
+from messages import MESSAGE_TYPE as MessageType
+
 class BasicHandler(object):
     '''
     Handler class that can be used as a parent class for observers on the
@@ -24,6 +26,9 @@ class BasicHandler(object):
         '''
         if message.typeId in self.__claims:
             self.__claims[message.typeId](source, message)
+
+        if MessageType.UNKNOWN in self.__claims:
+            self.__claims[MessageType.UNKNOWN](source, message)
 
     def _setClaim(self, typeId, function):
         '''

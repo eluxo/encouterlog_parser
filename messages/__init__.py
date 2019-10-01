@@ -668,6 +668,7 @@ class PlayerInfo(Message):
         return stack[0]
 
 class MESSAGE_TYPE:
+    UNKNOWN =        -1
     PLAYER_INFO =     0
     COMBAT_EVENT =    1
     END_LOG =         2
