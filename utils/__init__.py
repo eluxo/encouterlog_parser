@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
+from time import sleep
 import csv
 import threading
 
@@ -10,9 +11,7 @@ import traceback as tr
 
 from messages import MessageFactory
 
-from utils.time import GameClock
-
-import time
+from utils.gameclock import GameClock
 
 class TailSource:
     '''
@@ -56,7 +55,7 @@ class TailSource:
             if len(rc) != 0:
                 self.__fp.seek(pos)
 
-            time.sleep(self.__sleep)
+            sleep(self.__sleep)
 
 class EventSource(object):
     '''
