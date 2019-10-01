@@ -8,30 +8,7 @@ import traceback as tr
 
 from messages import MessageFactory
 
-class LatencyMeter(object):
-    def __init__(self):
-        self.start = -1
-        self.diff = 0
-        self.current = 0
-
-    def handle(self, message):
-        if message.type == "BEGIN_LOG":
-            self.__beginLog(message)
-            return
-
-        self.__message(message)
-
-    def __beginLog(self, beginLog):
-        self.start = beginLog.serverTime
-        self.diff = beginLog.time
-        self.__message(beginLog)
-
-    def __message(self, message):
-        self.current = self.start + self.diff + message.time
-
-    def getLatency(self):
-        now = int(time.time() * 1000)
-        return now - self.current
+from utils.time import GameClock
 
 class TailSource:
     '''
@@ -98,6 +75,7 @@ class EventSource(object):
         self.__running = False
         self.thread = None
         self.database = database.LogDatabase()
+        self.clock = GameClock()
 
     def loop(self, background = False):
         '''
@@ -138,6 +116,7 @@ class EventSource(object):
                 if not message:
                     continue
 
+                self.clock.handle(self, message)
                 if useDatabase:
                     self.database.handle(self, message)
 
