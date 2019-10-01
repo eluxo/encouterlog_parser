@@ -7,7 +7,6 @@ from messages import CLASS_ID as ClassId
 from messages import RACE_ID as RaceId
 from messages import UNIT_TYPE as UnitType
 
-
 class UnitData(object):
     '''
     Data describing a single unit.
@@ -26,6 +25,7 @@ class UnitData(object):
         if not unitAdded:
             return
 
+        self.unitStats = None
         clone = [ "unitId", "unitType", "playerId", "monsterType", "classId",
                   "raceId", "name", "account", "uuid", "level", "cp",
                   "parentId", "attitude", "inParty" ]
@@ -88,6 +88,16 @@ class UnitData(object):
         @return: Race name of the entity. Only useful on players.
         '''
         return RaceId[self.raceId]
+
+    def getInfoString(self):
+        '''
+        Getter for the char information string.
+
+        @return: Char information string.
+        '''
+        if not self.isPlayer():
+            return ""
+        return "%02d[%4d] %s %s" % (self.level, self.cp, self.getClassName(), self.getRaceName())
 
     def isPlayer(self):
         '''
@@ -183,3 +193,16 @@ class UnitRegistry(BasicRegistry):
         @return: List of all units.
         '''
         return self.__units.values()
+
+    def filter(self, filter):
+        '''
+        Returns the list of all known units based on a filter.
+
+        @return: Filtered list of units.
+        '''
+        rc = []
+        for unit in self.__units.values():
+            if filter(unit):
+                rc.append(unit)
+        return rc
+
