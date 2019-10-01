@@ -295,49 +295,6 @@ class UnitAdded(Message):
         self.attitude = row[16]                           # -> UNIT_ATTITUDE
         self.inParty = True if row[9] == "T" else False   # TODO: verify!
 
-    def getName(self):
-        '''
-        Constructs a name for the unit based on different values of the unit.
-
-        If there is no naming information available, it will create those
-        infamous Anonymus <number> entries that should match with the
-        encounterlog website.
-
-        @return: Name for the unit.
-        '''
-        name = ""
-        if len(self.name) > 0:
-            name += self.name
-
-        if len(self.account) > 0:
-            name += " [%s]" % self.account
-
-        if len(name) == 0:
-            name = "Anonymous %d" % self.unitId
-
-        return name
-
-    def getClassName(self):
-        '''
-        Getter for the name of the class.
-
-        @return: Class name of the entity. Only useful on players.
-        '''
-        return CLASS_ID[self.classId]
-
-    def getRaceName(self):
-        '''
-        Getter for the name of the race.
-
-        @return: Race name of the entity. Only useful on players.
-        '''
-        return RACE_ID[self.raceId]
-
-    def isPlayer(self):
-        '''
-        Returns true, if unit is a player character.
-        '''
-        return self.unitType == "PLAYER"
 
 class UnitRemoved(Message):
     '''
