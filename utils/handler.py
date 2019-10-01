@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# encoding: utf-8
+
 class BasicHandler(object):
     '''
     Handler class that can be used as a parent class for observers on the
