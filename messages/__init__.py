@@ -289,8 +289,8 @@ class UnitAdded(Message):
         self.name = row[10]
         self.account = row[11]
         self.uuid = int(row[12])
-        self.level = row[13]                              # 1-50
-        self.cp = row[14]                                 # does not cap with 810
+        self.level = int(row[13])                         # 1-50
+        self.cp = int(row[14])                            # does not cap with 810
         self.parentId = int(row[14])                      # unit owning this unit
         self.attitude = row[16]                           # -> UNIT_ATTITUDE
         self.inParty = True if row[9] == "T" else False   # TODO: verify!
