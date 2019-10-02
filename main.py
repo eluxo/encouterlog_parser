@@ -6,12 +6,13 @@ import messages
 import utils
 import traceback as tr
 from utils.handler import BasicHandler
+from utils.damagetracker import DamageTracker
 
 from messages import MESSAGE_TYPE as MessageType
 
 #LOGFILE='/mnt/c/Users/nexus/Documents/Elder Scrolls Online/live/Logs/encounterlog.backup.txt'
-LOGFILE='/mnt/c/Users/nexus/Documents/Elder Scrolls Online/live/Logs/Encounter.log'
-#LOGFILE="samples/sample1.log"
+#LOGFILE='/mnt/c/Users/nexus/Documents/Elder Scrolls Online/live/Logs/Encounter.log'
+LOGFILE="samples/sample1.log"
 
 class Handler(BasicHandler):
     def __init__(self):
@@ -67,7 +68,9 @@ class Handler(BasicHandler):
         self.damageSums[srcId][dstId] += message.damage
 
 handler = Handler()
+tracker = DamageTracker()
 loop = utils.EventSource.createFileReaderSource(LOGFILE) \
+    .addHandler(tracker) \
     .addHandler(handler) \
     .enableDatabase() \
     .loop(background = True)

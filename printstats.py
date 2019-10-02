@@ -13,7 +13,8 @@ from utils.handler import BasicHandler
 
 from messages import MESSAGE_TYPE as MessageType
 
-LOGFILE='/mnt/c/Users/nexus/Documents/Elder Scrolls Online/live/Logs/Encounter.log'
+#LOGFILE='/mnt/c/Users/nexus/Documents/Elder Scrolls Online/live/Logs/Encounter.log'
+LOGFILE='samples/sample1.log'
 
 RED=    "\033[0;31m"
 GREEN=  "\033[0;32m"
@@ -61,6 +62,7 @@ class StatusDisplay(BasicHandler):
         '''
         now = int(time.time() * 1000)
         clock = self.eventSource.clock
+        location = self.eventSource.database.location
         units = self.eventSource.database.units
         gameClock = clock.getGameClock()
         start = clock.getCombatStart()
@@ -73,6 +75,7 @@ class StatusDisplay(BasicHandler):
             self.__clear()
         self.__oldCount = newCount
 
+        print("Location: %s[%s] %s[%s] %s" % (location.zoneName, location.zoneId, location.mapName, location.mapId, " "*20))
         for ally in allies:
             self.__printStats(ally)
 
