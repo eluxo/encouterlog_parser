@@ -4,6 +4,7 @@
 from database.unit import UnitRegistry
 from database.ability import AbilityRegistry
 from database.effect import EffectRegistry
+from database.location import LocationData
 
 class LogDatabase:
     '''
@@ -18,7 +19,8 @@ class LogDatabase:
         self.units = UnitRegistry()
         self.abilities = AbilityRegistry()
         self.effects = EffectRegistry()
-        self.__registries = [ self.units, self.abilities, self.effects ]
+        self.location = LocationData()
+        self.__registries = [ self.units, self.abilities, self.effects, self.location ]
 
     def handle(self, source, message):
         '''
