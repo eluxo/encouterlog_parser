@@ -26,6 +26,7 @@ class UnitData(object):
             return
 
         self.unitStats = None
+        self.playerInfo = None
         clone = [ "unitId", "unitType", "playerId", "monsterType", "classId",
                   "raceId", "name", "account", "uuid", "level", "cp",
                   "parentId", "attitude", "inParty" ]
@@ -39,6 +40,14 @@ class UnitData(object):
         @param unitStats: The stats to be set on the unit.
         '''
         self.unitStats = unitStats
+
+    def setPlayerInfo(self, playerInfo):
+        '''
+        Updates the player information on the unit.
+
+        @param playerInfo: The player information to be set.
+        '''
+        self.playerInfo = playerInfo
 
     def hasStats(self):
         '''
@@ -123,6 +132,7 @@ class UnitRegistry(BasicRegistry):
         super(UnitRegistry, self).__init__()
         self._setClaim(MessageType.UNIT_ADDED, self.__unitAdded)
         self._setClaim(MessageType.UNIT_REMOVED, self.__unitRemoved)
+        self._setClaim(MessageType.PLAYER_INFO, self.__playerInfo)
         for entry in [MessageType.BEGIN_CAST,
                       MessageType.EFFECT_CHANGED,
                       MessageType.COMBAT_EVENT]:
@@ -148,6 +158,19 @@ class UnitRegistry(BasicRegistry):
         unit = self.__units[unitRemoved.unitId]
         self.__units[unitRemoved.unitId] = None
         del self.__units[unitRemoved.unitId]
+
+    def __playerInfo(self, source, playerInfo):
+        '''
+        Receives additional player information data containing skills and
+        other data about the player.
+
+        The data will be attached to the unit.
+        @param source: The event source causing the message.
+        @param unitAdded: The adding message.
+        '''
+        if not playerInfo.unitId in self.__units:
+            return
+        self.__units[playerInfo.unitId].setPlayerInfo(playerInfo)
 
     def __unitMessage(self, source, message):
         '''
