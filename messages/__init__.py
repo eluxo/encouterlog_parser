@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
+import traceback as tr
+import sys
+
 class Message(object):
     '''
     Base class for all the messages in the log.
@@ -46,6 +49,27 @@ class Message(object):
         @return: Type value from the data row.
         '''
         return row[1]
+
+    def _warnNewValue(self, value, definition, row):
+        '''
+        Checks, if a value exists in the defition object.
+
+        @param value: The value to be checked.
+        @param definition: The defitionion to look up.
+        @param row: The row of data.
+        '''
+        while True:
+            if not hasattr(definition, value):
+                break
+
+            if not getattr(definition, value) == value:
+                break
+
+            return True
+        print("Warn: unknown value %s" % (value))
+        print("Data: %s" % ",".join(row))
+        tr.print_stack(file = sys.stdout)
+        return False
 
 class Position(object):
     '''
@@ -186,6 +210,18 @@ class BeginLog(Message):
         # 4,BEGIN_LOG,1569001784970,15,"EU Megaserver","de","eso.live.5.1"
         # 4,BEGIN_LOG,1569002720028,15,"EU Megaserver","de","eso.live.5.1"
 
+class ZONE_MODE_ID:
+    VETERAN = "VETERAN"
+    NORMAL = "NORMAL"
+    NONE = "NONE"
+
+    def exists(zoneModeId):
+        '''
+        Checks, if the given event type really exists in the list of types.
+        '''
+        return hasattr(ZONE_MODE_ID, zoneModeId)
+
+
 class ZoneChanged(Message):
     '''
     Marks the change of a zone where the logging player is currently located.
@@ -200,7 +236,8 @@ class ZoneChanged(Message):
         super(ZoneChanged, self).__init__(row)
         self.zoneId = int(row[2]) # is this really a zone id? think so.
         self.zoneName = row[3]
-        self.zoneMode = row[4] # VETERAN, NORMAL, NONE
+        self.zoneMode = row[4]    # ->ZONE_MODE_ID
+        self._warnNewValue(self.zoneMode, ZONE_MODE_ID, row)
 
 class MapChanged(Message):
     '''
@@ -215,7 +252,7 @@ class MapChanged(Message):
         @param row: The row of CSV data.
         '''
         super(MapChanged, self).__init__(row)
-        self.mapId = row[2]
+        self.mapId = int(row[2])
         self.mapName = row[3]
         self.mapFile = row[4]
 
@@ -250,10 +287,23 @@ class UNIT_ATTITUDE:
     NPC_ALLY="NPC_ALLY"
     PLAYER_ALLY="PLAYER_ALLY"
 
+    def exists(unitAttitude):
+        '''
+        Checks, if the given event type really exists in the list of types.
+        '''
+        return hasattr(UNIT_ATTITUDE, effectType)
+
 class UNIT_TYPE:
     PLAYER = "PLAYER"
     MONSTER = "MONSTER"
     OBJECT = "OBJECT"
+
+    def exists(unitType):
+        '''
+        Checks, if the given event type really exists in the list of types.
+        '''
+        return hasattr(UNIT_TYPE, effectType)
+
 
 class UnitAdded(Message):
     '''
@@ -280,6 +330,7 @@ class UnitAdded(Message):
         super(UnitAdded, self).__init__(row)
         self.unitId = int(row[2])
         self.unitType = row[3]                                # -> UNIT_TYPE
+        self._warnNewValue(self.unitType, UNIT_TYPE, row)
         # TODO: 4? T/F
         self.playerId = int(row[5])                       # 5 -> TODO: only set for PLAYERS and counted upwards, unique by session?
         self.monsterType = int(row[6])                    # 6 -> TODO: only set for MONSTER
@@ -293,6 +344,7 @@ class UnitAdded(Message):
         self.cp = int(row[14])                            # does not cap with 810
         self.parentId = int(row[14])                      # unit owning this unit
         self.attitude = row[16]                           # -> UNIT_ATTITUDE
+        self._warnNewValue(self.attitude, UNIT_ATTITUDE, row)
         self.inParty = True if row[9] == "T" else False   # TODO: verify!
 
 
@@ -342,6 +394,13 @@ class INTERRUPT_STATUS:
     PLAYER_CANCELLED = "PLAYER_CANCELLED"
     INTERRUPTED = "INTERRUPTED"
 
+    @staticmethod
+    def exists(interruptStatus):
+        '''
+        Checks, if the given event type really exists in the list of types.
+        '''
+        return hasattr(INTERRUPT_STATUS, interruptStatus)
+
 class EndCast(Message):
     '''
     Marks the end of a cast event.
@@ -359,12 +418,20 @@ class EndCast(Message):
         '''
         super(EndCast, self).__init__(row)
         self.interruptStatus = row[2] # -> INTERRUPT_STATUS
+        self._warnNewValue(self.interruptStatus, INTERRUPT_STATUS, row)
         self.abilityId = row[3]       # -> AbilityInfo.abilityId
         self.castId = row[4]          # -> BeginCast.castId
 
 class EFFECT_CATEGORY:
     BUFF = "BUFF"
     DEBUFF = "DEBUFF"
+
+    @staticmethod
+    def exists(effectCategory):
+        '''
+        Checks, if the given event type really exists in the list of types.
+        '''
+        return hasattr(EFFECT_CATEGORY, effectCategory)
 
 class EFFECT_TYPE:
     BLEED = "BLEED"
@@ -373,6 +440,13 @@ class EFFECT_TYPE:
     NONE = "NONE"
     POISON = "POISON"
     SNARE = "SNARE"
+
+    @staticmethod
+    def exists(effectType):
+        '''
+        Checks, if the given event type really exists in the list of types.
+        '''
+        return hasattr(EFFECT_TYPE, effectType)
 
 class EffectInfo(Message):
     '''
@@ -391,7 +465,9 @@ class EffectInfo(Message):
         super(EffectInfo, self).__init__(row)
         self.abilityId = int(row[2]) # -> AbilityInfo -> AbilityId
         self.effectCategory = row[3] # -> EFFECT_CATEGORY
+        self._warnNewValue(self.effectCategory, EFFECT_CATEGORY, row)
         self.effectType = row[4]     # -> EFFECT_TYPE
+        self._warnNewValue(self.effectType, EFFECT_TYPE, row)
         # TODO: 5
         # TODO: 6 (optional)
         #1580769,EFFECT_INFO,57477,BUFF,NONE,F
@@ -430,6 +506,13 @@ class EFFECT_CHANGE:
     FADED = "FADED"
     UPDATED = "UPDATED"
 
+    @staticmethod
+    def exists(effectChange):
+        '''
+        Checks, if the given event type really exists in the list of types.
+        '''
+        return hasattr(EVENT_TYPE, effectChange)
+
 class EffectChanged(Message):
     '''
     Effects might change over time.
@@ -447,6 +530,7 @@ class EffectChanged(Message):
         '''
         super(EffectChanged, self).__init__(row, 6, 16)
         self.change = row[2] # -> EFFECT_CHANGE
+        self._warnNewValue(self.change, EFFECT_CHANGE, row)
         # 3 # self.unitId = int(row[3]) # TODO: the one casting or the one receiving? guess the first.
         #0    1              2      3 4       5   6 7           8           9           10      11     12    13     14     15     16
         #4215,EFFECT_CHANGED,GAINED,1,2759103,973,1,40844/40844,20505/23025,21717/24003,449/500,0/1000,26902,0.5177,0.8850,5.9674,*
@@ -471,6 +555,7 @@ class HealthRegen(Message):
 class EVENT_TYPE:
     ABILITY_ON_COOLDOWN = "ABILITY_ON_COOLDOWN"
     BAD_TARGET = "BAD_TARGET"
+    BLOCKED = "BLOCKED"
     BLOCKED_DAMAGE = "BLOCKED_DAMAGE"
     BUSY = "BUSY"
     CANNOT_USE = "CANNOT_USE"
@@ -488,12 +573,14 @@ class EVENT_TYPE:
     FAILED = "FAILED"
     FAILED_REQUIREMENTS = "FAILED_REQUIREMENTS"
     FALL_DAMAGE = "FALL_DAMAGE"
+    FEARED = "FEARED"
     HEAL = "HEAL"
     HEAL_ABSORBED = "HEAL_ABSORBED"
     HOT_TICK = "HOT_TICK"
     HOT_TICK_CRITICAL = "HOT_TICK_CRITICAL"
     IMMUNE = "IMMUNE"
     INSUFFICIENT_RESOURCE = "INSUFFICIENT_RESOURCE"
+    INTERCEPTED = "INTERCEPTED"
     INTERRUPT = "INTERRUPT"
     IN_AIR = "IN_AIR"
     KILLING_BLOW = "KILLING_BLOW"
@@ -506,6 +593,8 @@ class EVENT_TYPE:
     QUEUED = "QUEUED"
     REFLECTED = "REFLECTED"
     REINCARNATING = "REINCARNATING"
+    RESURRECT = "RESURRECT"
+    SILENCED = "SILENCED"
     SNARED = "SNARED"
     SOUL_GEM_RESURRECTION_ACCEPTED = "SOUL_GEM_RESURRECTION_ACCEPTED"
     SPRINTING = "SPRINTING"
@@ -516,9 +605,17 @@ class EVENT_TYPE:
     TARGET_OUT_OF_RANGE = "TARGET_OUT_OF_RANGE"
     TARGET_TOO_CLOSE = "TARGET_TOO_CLOSE"
 
+    @staticmethod
+    def exists(eventType):
+        '''
+        Checks, if the given event type really exists in the list of types.
+        '''
+        return hasattr(EVENT_TYPE, eventType)
+
 class EVENT_ELEMENT:
     COLD = "COLD"
     DISEASE = "DISEASE"
+    EARTH = "EARTH"
     FIRE = "FIRE"
     GENERIC = "GENERIC"
     INVALID = "INVALID"
@@ -529,12 +626,26 @@ class EVENT_ELEMENT:
     POISON = "POISON"
     SHOCK = "SHOCK"
 
+    @staticmethod
+    def exists(eventElement):
+        '''
+        Checks, if the given event element really exists in the list of types.
+        '''
+        return hasattr(EVENT_ELEMENT, eventType)
+
 class EVENT_RESOURCE:
     INVALID = "INVALID"
     MAGICKA = "MAGICKA"
     MOUNT_STAMINA = "MOUNT_STAMINA"
     STAMINA = "STAMINA"
     ULTIMATE = "ULTIMATE"
+
+    @staticmethod
+    def exists(eventResource):
+        '''
+        Checks, if the given event resource really exists in the list of types.
+        '''
+        return hasattr(EVENT_RESOURCE, eventType)
 
 class CombatEvent(Message):
     '''
@@ -557,8 +668,11 @@ class CombatEvent(Message):
         '''
         super(CombatEvent, self).__init__(row, 9, 19)
         self.eventType = row[2]          # -> EVENT_TYPE
+        self._warnNewValue(self.eventType, EVENT_TYPE, row)
         self.element = row[3]            # -> EVENT_ELEMENT
+        self._warnNewValue(self.element, EVENT_ELEMENT, row)
         self.resource = row[4]           # -> EVENT_RESOURCE INVALID,MAGICKA,STAMINA,ULTIMATE,MOUNT_STAMINA
+        self._warnNewValue(self.resource, EVENT_RESOURCE, row)
         self.damage = int(row[5])        # amount of damage?
         self.heal = int(row[6])          # amount of heal?
 
@@ -589,22 +703,26 @@ class UnitChanged(Message):
         @param row: The row of CSV data.
         '''
         super(UnitChanged, self).__init__(row)
-        self.unitId = row[2] # unsure
-        # 2
+        self.unitId = int(row[2])
         # 3
-        self.unitName = row[4]
-        self.unitAccount = row[5]
         # 4
-        self.unitLevel = row[5]
-        self.unitCP = row[6]
+        self.unitName = row[5]
+        self.unitAccount = row[6]
         # 7
-        self.unitAttitude = row[8]
-        self.inParty = True if row[9] == "T" else False # verify?
+        self.unitLevel = row[8]
+        self.unitCP = row[9]
+        # 10
+        self.unitAttitude = row[11]  # ->UNIT_ATTITUDE
+        self._warnNewValue(self.unitAttitude, UNIT_ATTITUDE, row)
+        self.inParty = True if row[12] == "T" else False # verify?
 
+        #     0            1   2 3 4                 5  6 7  8   9        11 12
         #484573,UNIT_CHANGED,245,0,0,"Skelett-Schütze","",0,50,160,0,HOSTILE,F
         #522730,UNIT_CHANGED,643,0,0,"Skelett-Schütze","",0,50,160,0,HOSTILE,F
         #551112,UNIT_CHANGED,927,0,0,"Frostbrunnen","",0,50,160,0,HOSTILE,F
         #554326,UNIT_CHANGED,924,0,0,"Nachstellender Sprengknochen","",0,50,160,0,HOSTILE,F
+        #285510,UNIT_CHANGED,19,3,9,,,0,50,28,0,PLAYER_ALLY,T
+
 
 class PlayerInfo(Message):
     '''
